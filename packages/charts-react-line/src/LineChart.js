@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import * as shape from 'd3-shape';
+import { extent } from 'd3-array';
 import { palettes } from '@ibm-design/charts-colors';
 import Chart from '@ibm-design/charts-react-chart';
 import Colors from 'ibm-design-colors/ibm-colors';
@@ -84,6 +85,48 @@ export default class LineChart extends React.PureComponent {
     this.line = shape.line()
       .x((d) => this.x(x(d)))
       .y((d) => this.y(y(d)));
+
+
+    this.setState({ ranges: this.getRange(this.props.lines) });
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.lines !== this.props.lines) {
+      this.setState({ ranges: this.getRange(this.props.lines) });
+    }
+  }
+
+  getRange = lines => {
+    const xArrays = lines.map(line =>
+      line.map(obj => obj[Object.keys(obj)[0]])
+    );
+    const yArrays = lines.map(line =>
+      line.map(obj => obj[Object.keys(obj)[1]])
+    );
+    const flatten = arr => arr
+      .reduce((acc, val) => acc.concat(Array.isArray(val)
+        ? flatten(val)
+        : val), []
+      );
+
+    const xRange = extent(flatten(xArrays));
+    const yRange = extent(flatten(yArrays));
+    return [
+      {
+        min: xRange[0],
+        max: xRange[1],
+        tickCount: this.props.grid[0].tickCount
+          ? this.props.grid[0].tickCount
+          : 5,
+      },
+      {
+        min: yRange[0],
+        max: yRange[1],
+        tickCount: this.props.grid[1].tickCount
+          ? this.props.grid[1].tickCount
+          : 5,
+      },
+    ]
   }
 
   render() {
@@ -113,8 +156,17 @@ export default class LineChart extends React.PureComponent {
           height={height}
           margin={margin}
           width={width - legendWidth}
-          x={grid[0]}
-          y={grid[1]}>
+          x={
+            grid[0].text || (grid[0].min && grid[0].max)
+              ? grid[0]
+              : this.state.ranges[0]
+          }
+          y={
+            grid[1].text || (grid[1].min && grid[1].max)
+              ? grid[1]
+              : this.state.ranges[1]
+          }
+        >
           {lines}
         </Chart>
       </div>
