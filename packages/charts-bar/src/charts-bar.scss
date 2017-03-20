@@ -2,7 +2,7 @@
 
 .ibm-chart {
 
-  @import "https://raw.githubusercontent.com/IBM-Design/colors/master/_ibm-colors.scss";
+  @import "../node_modules/ibm-design-colors/_ibm-colors.scss";
 
   /* copied from James' pen: */
   @font-face {
